@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo de Dominó</title>
+  <style>
+    /* Estilos básicos para o jogo de dominó */
+    #board {
+      margin-bottom: 20px;
+    }
+
+    #player-hand {
+      margin-top: 20px;
+    }
+
+    .tile {
+      display: inline-block;
+      width: 60px;
+      height: 120px;
+      border: 1px solid black;
+      text-align: center;
+      line-height: 120px;
+      font-size: 24px;
+      font-weight: bold;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogo de Dominó</h1>
+  <div id="board">
+    <!-- Aqui serão exibidas as pedras jogadas na mesa -->
+  </div>
+  <div id="player-hand">
+    <!-- Aqui serão exibidas as pedras na mão do jogador -->
+  </div>
+  <script>
+    // Array para acompanhar as pedras disponíveis
+    let availableTiles = [
+      { top: 0, bottom: 0 }, { top: 0, bottom: 1 }, { top: 0, bottom: 2 }, // ... e assim por diante, até as 28 pedras
+    ];
+
+    // Função para inicializar o jogo
+    function initGame() {
+      // Distribuir pedras para os jogadores
+      // ...
+      // Renderizar as pedras disponíveis e as pedras na mão do jogador
+      renderAvailableTiles();
+      // ...
+    }
+
+    // Função para renderizar as pedras disponíveis
+    function renderAvailableTiles() {
+      const boardElement = document.getElementById('board');
+      boardElement.innerHTML = '';
+
+      for (let i = 0; i < availableTiles.length; i++) {
+        const tile = availableTiles[i];
+        const tileElement = document.createElement('div');
+        tileElement.className = 'tile';
+        tileElement.textContent = tile.top + ' | ' + tile.bottom;
+        boardElement.appendChild(tileElement);
+      }
+    }
+
+    // Chamada para inicializar o jogo
+    initGame();
+  </script>
+</body>
+</html>
