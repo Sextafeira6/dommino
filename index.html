@@ -154,7 +154,7 @@
   const triangle = document.getElementById('domino-triangle');
   const statsOutput = document.getElementById('stats-output');
   const allTiles = [];
-  let tileSelecionadaParaMover = null;
+  let tilesParaMover = new Set(); // Suporta múltiplas pedras
 
   const dotPatterns = {
     0: [], 1: [4], 2: [0, 8], 3: [0, 4, 8],
@@ -205,7 +205,7 @@
   function makeTileInteractive(tile) {
     let lastTap = 0;
 
-    tile.addEventListener('click', () => {
+    tile.addEventListener('click', (e) => {
       const now = new Date().getTime();
       const doubleTap = (now - lastTap) < 300;
       lastTap = now;
@@ -216,12 +216,24 @@
         return;
       }
 
-      // Clique único → selecionar para mover
-      if (tileSelecionadaParaMover) {
-        tileSelecionadaParaMover.classList.remove('selected-for-move');
+      const ctrlPressed = e.ctrlKey || e.metaKey;
+
+      // Seleção múltipla com ctrl ou com toque simples no mobile
+      if (ctrlPressed || window.innerWidth < 768) {
+        tile.classList.toggle('selected-for-move');
+        if (tilesParaMover.has(tile)) {
+          tilesParaMover.delete(tile);
+        } else {
+          tilesParaMover.add(tile);
+        }
+      } else {
+        // Seleção única
+        tilesParaMover.forEach(t => t.classList.remove('selected-for-move'));
+        tilesParaMover.clear();
+
+        tilesParaMover.add(tile);
+        tile.classList.add('selected-for-move');
       }
-      tileSelecionadaParaMover = tile;
-      tile.classList.add('selected-for-move');
     });
 
     tile.draggable = true;
@@ -270,10 +282,12 @@
     });
 
     container.addEventListener('click', () => {
-      if (tileSelecionadaParaMover) {
-        container.appendChild(tileSelecionadaParaMover);
-        tileSelecionadaParaMover.classList.remove('selected-for-move');
-        tileSelecionadaParaMover = null;
+      if (tilesParaMover.size > 0) {
+        tilesParaMover.forEach(tile => {
+          container.appendChild(tile);
+          tile.classList.remove('selected-for-move');
+        });
+        tilesParaMover.clear();
         updateStats();
       }
     });
