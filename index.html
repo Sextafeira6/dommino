@@ -1,162 +1,288 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Jogo de Dominó</title>
+  <title>Dominó - Contabilidade</title>
   <style>
-    /* Estilos básicos para o jogo de dominó */
-    #board {
-      margin-bottom: 20px;
+    body {
+      font-family: sans-serif;
+      background: #eee;
+      padding: 20px;
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
     }
 
-    #player-hand {
-      margin-top: 20px;
+    .triangle {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .row {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-start;
     }
 
     .tile {
-      display: inline-block;
       width: 60px;
       height: 120px;
-      border: 1px solid black;
-      text-align: center;
-      font-size: 24px;
-      margin-right: 5px;
-      margin-bottom: 5px;
-      cursor: pointer;
+      background: #fefefe;
+      border: 2px solid #222;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
       position: relative;
-    }
-
-    .tile:before {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 50%;
-      border-top: 1px solid black;
-    }
-
-    .top-face,
-    .bottom-face {
-      position: absolute;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 50%;
-      word-wrap: break-word;
-    }
-
-    .dot-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background-color: black;
+      cursor: pointer;
+      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s;
       margin: 2px;
     }
 
-    .bottom-face {
-      bottom: 0;
-      transform: rotate(180deg);
+    .tile.selected {
+      background-color: #cc0000;
     }
 
-    .played {
-      background-color: red;
+    .tile.selected-for-move {
+      outline: 3px dashed orange;
+    }
+
+    .divider {
+      height: 2px;
+      background-color: black;
+      width: 90%;
+      margin: 0 auto;
+    }
+
+    .half {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 4px;
+      justify-items: center;
+      align-items: center;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: black;
+      border-radius: 50%;
+    }
+
+    .panel {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+      max-height: fit-content;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel h2 {
+      margin-top: 0;
+    }
+
+    .stats {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .hand {
+      background: white;
+      border: 2px solid #ccc;
+      padding: 10px;
+      border-radius: 10px;
+      width: 220px;
+      min-height: 150px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .hand h3 {
+      margin-top: 0;
+    }
+
+    .hand-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 100px;
     }
   </style>
 </head>
 <body>
-  <h1>Jogo de Dominó</h1>
-  <div id="board">
-    <!-- Aqui serão exibidas as pedras jogadas na mesa -->
+
+<div class="panel">
+  <h2>Contabilidade</h2>
+  <div class="stats" id="stats-output">Carregando...</div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+    <div class="hand" data-player="undefined">
+      <h3>Indefinido</h3>
+      <div class="hand-container" id="undefined-hand"></div>
+    </div>
+    <div class="hand" data-player="1">
+      <h3>Jogador 1</h3>
+      <div class="hand-container" id="player1-hand"></div>
+    </div>
+    <div class="hand" data-player="2">
+      <h3>Jogador 2</h3>
+      <div class="hand-container" id="player2-hand"></div>
+    </div>
   </div>
-  <div id="player-hand">
-    <!-- Aqui serão exibidas as pedras na mão do jogador -->
-  </div>
-  <script>
-    // Array para acompanhar as pedras disponíveis
-    let availableTiles = [
-      { top: 0, bottom: 0 }, { top: 0, bottom: 1 }, { top: 0, bottom: 2 }, { top: 0, bottom: 3 },
-      { top: 0, bottom: 4 }, { top: 0, bottom: 5 }, { top: 0, bottom: 6 }, { top: 1, bottom: 1 },
-      { top: 1, bottom: 2 }, { top: 1, bottom: 3 }, { top: 1, bottom: 4 }, { top: 1, bottom: 5 },
-      { top: 1, bottom: 6 }, { top: 2, bottom: 2 }, { top: 2, bottom: 3 }, { top: 2, bottom: 4 },
-      { top: 2, bottom: 5 }, { top: 2, bottom: 6 }, { top: 3, bottom: 3 }, { top: 3, bottom: 4 },
-      { top: 3, bottom: 5 }, { top: 3, bottom: 6 }, { top: 4, bottom: 4 }, { top: 4, bottom: 5 },
-      { top: 4, bottom: 6 }, { top: 5, bottom: 5 }, { top: 5, bottom: 6 }, { top: 6, bottom: 6 }
-    ];
+</div>
 
-    // Função para inicializar o jogo
-    function initGame() {
-      // Distribuir pedras para os jogadores
-      // ...
-      // Renderizar as pedras disponíveis e as pedras na mão do jogador
-      renderAvailableTiles();
-      // ...
-    }
+<div class="triangle" id="domino-triangle"></div>
 
-    // Função para renderizar as pedras disponíveis
-    function renderAvailableTiles() {
-      const boardElement = document.getElementById('board');
-      boardElement.innerHTML = '';
+<script>
+  const triangle = document.getElementById('domino-triangle');
+  const statsOutput = document.getElementById('stats-output');
+  const allTiles = [];
+  let tileSelecionadaParaMover = null;
 
-      for (let i = 0; i < availableTiles.length; i++) {
-        const tile = availableTiles[i];
-        const tileElement = document.createElement('div');
-        tileElement.className = 'tile';
+  const dotPatterns = {
+    0: [],
+    1: [4],
+    2: [0, 8],
+    3: [0, 4, 8],
+    4: [0, 2, 6, 8],
+    5: [0, 2, 4, 6, 8],
+    6: [0, 2, 3, 5, 6, 8]
+  };
 
-        const topFaceElement = document.createElement('div');
-        topFaceElement.className = 'top-face';
-        renderDots(topFaceElement, tile.top);
+  const faceNames = ["Branco", "Ás", "Duque", "Terno", "Quadra", "Quina", "Sena"];
 
-        const bottomFaceElement = document.createElement('div');
-        bottomFaceElement.className = 'bottom-face';
-        renderDots(bottomFaceElement, tile.bottom);
-
-        tileElement.appendChild(topFaceElement);
-        tileElement.appendChild(bottomFaceElement);
-
-        tileElement.addEventListener('click', () => {
-          tileElement.classList.toggle('played');
-        });
-
-        boardElement.appendChild(tileElement);
+  function createHalf(value) {
+    const half = document.createElement('div');
+    half.classList.add('half');
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement('div');
+      if (dotPatterns[value].includes(i)) {
+        const dot = document.createElement('div');
+        dot.classList.add('dot');
+        cell.appendChild(dot);
       }
+      half.appendChild(cell);
     }
+    return half;
+  }
 
-    // Função para renderizar os pontos nas faces das pedras
-    function renderDots(container, num) {
-      const dotsContainer = document.createElement('div');
-      dotsContainer.className = 'dot-container';
+  function updateStats() {
+    let remainingTiles = 0;
+    let remainingFaces = 0;
+    const faceCount = Array(7).fill(0);
 
-      // Ajustando o número de linhas para 2 caso o número seja 4 ou 6
-      const rows = (num === 4 || num === 6) ? 2 : 1;
-      const dotsPerRow = num / rows;
+    allTiles.forEach(tile => {
+      if (!tile.element.classList.contains('selected')) {
+        remainingTiles++;
+        faceCount[tile.i]++;
+        faceCount[tile.j]++;
+        remainingFaces += 2;
+      }
+    });
 
-      for (let i = 0; i < rows; i++) {
-        const row = document.createElement('div');
-        row.className = 'dot-row';
+    let output = `<strong>Pedras disponíveis:</strong> ${remainingTiles}/28<br>`;
+    output += `<strong>Total de faces disponíveis:</strong> ${remainingFaces}<br><br>`;
+    output += `<strong>Faces restantes:</strong><br>`;
+    faceCount.forEach((count, value) => {
+      output += `${faceNames[value]} (${value}): ${count}<br>`;
+    });
 
-        for (let j = 0; j < dotsPerRow; j++) {
-          const dot = document.createElement('span');
-          dot.className = 'dot';
-          row.appendChild(dot);
+    statsOutput.innerHTML = output;
+  }
+
+  function makeTileDraggable(tile) {
+    tile.draggable = true;
+
+    tile.addEventListener('dragstart', (e) => {
+      const index = allTiles.findIndex(t => t.element === tile);
+      e.dataTransfer.setData('text/plain', index.toString());
+    });
+
+    // Clique longo
+    let pressTimer = null;
+
+    tile.addEventListener('mousedown', () => {
+      pressTimer = setTimeout(() => {
+        if (tileSelecionadaParaMover) {
+          tileSelecionadaParaMover.classList.remove('selected-for-move');
         }
+        tileSelecionadaParaMover = tile;
+        tile.classList.add('selected-for-move');
+      }, 2000);
+    });
 
-        dotsContainer.appendChild(row);
-      }
+    tile.addEventListener('mouseup', () => {
+      clearTimeout(pressTimer);
+    });
 
-      container.appendChild(dotsContainer);
+    tile.addEventListener('mouseleave', () => {
+      clearTimeout(pressTimer);
+    });
+  }
+
+  // Criar as pedras
+  for (let i = 0; i <= 6; i++) {
+    const row = document.createElement('div');
+    row.classList.add('row');
+
+    for (let j = 0; j <= i; j++) {
+      const tile = document.createElement('div');
+      tile.classList.add('tile');
+
+      const top = createHalf(j);
+      const divider = document.createElement('div');
+      divider.classList.add('divider');
+      const bottom = createHalf(i);
+
+      tile.appendChild(top);
+      tile.appendChild(divider);
+      tile.appendChild(bottom);
+
+      const tileObj = { element: tile, i: j, j: i };
+      allTiles.push(tileObj);
+
+      makeTileDraggable(tile);
+
+      tile.addEventListener('click', () => {
+        tile.classList.toggle('selected');
+        updateStats();
+      });
+
+      row.appendChild(tile);
     }
 
-    // Chamada para inicializar o jogo
-    initGame();
-  </script>
+    triangle.appendChild(row);
+  }
+
+  // Ativar áreas de drop e clique
+  document.querySelectorAll('.hand-container').forEach(container => {
+    container.addEventListener('dragover', e => e.preventDefault());
+
+    container.addEventListener('drop', e => {
+      e.preventDefault();
+      const index = parseInt(e.dataTransfer.getData('text/plain'));
+      const tileObj = allTiles[index];
+      container.appendChild(tileObj.element);
+      updateStats();
+    });
+
+    container.addEventListener('click', () => {
+      if (tileSelecionadaParaMover) {
+        container.appendChild(tileSelecionadaParaMover);
+        tileSelecionadaParaMover.classList.remove('selected-for-move');
+        tileSelecionadaParaMover = null;
+        updateStats();
+      }
+    });
+  });
+
+  updateStats();
+</script>
+
 </body>
 </html>
