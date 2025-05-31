@@ -37,15 +37,10 @@
       cursor: pointer;
       box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
       transition: background-color 0.3s;
-      margin: 2px;
     }
 
     .tile.selected {
       background-color: #cc0000;
-    }
-
-    .tile.selected-for-move {
-      outline: 3px dashed orange;
     }
 
     .divider {
@@ -112,6 +107,10 @@
       gap: 6px;
       min-height: 100px;
     }
+
+    .tile {
+      margin: 2px;
+    }
   </style>
 </head>
 <body>
@@ -142,7 +141,6 @@
   const triangle = document.getElementById('domino-triangle');
   const statsOutput = document.getElementById('stats-output');
   const allTiles = [];
-  let tileSelecionadaParaMover = null;
 
   const dotPatterns = {
     0: [],
@@ -202,27 +200,6 @@
       const index = allTiles.findIndex(t => t.element === tile);
       e.dataTransfer.setData('text/plain', index.toString());
     });
-
-    // Clique longo
-    let pressTimer = null;
-
-    tile.addEventListener('mousedown', () => {
-      pressTimer = setTimeout(() => {
-        if (tileSelecionadaParaMover) {
-          tileSelecionadaParaMover.classList.remove('selected-for-move');
-        }
-        tileSelecionadaParaMover = tile;
-        tile.classList.add('selected-for-move');
-      }, 2000);
-    });
-
-    tile.addEventListener('mouseup', () => {
-      clearTimeout(pressTimer);
-    });
-
-    tile.addEventListener('mouseleave', () => {
-      clearTimeout(pressTimer);
-    });
   }
 
   // Criar as pedras
@@ -259,7 +236,7 @@
     triangle.appendChild(row);
   }
 
-  // Ativar áreas de drop e clique
+  // Ativar áreas de drop
   document.querySelectorAll('.hand-container').forEach(container => {
     container.addEventListener('dragover', e => e.preventDefault());
 
@@ -269,15 +246,6 @@
       const tileObj = allTiles[index];
       container.appendChild(tileObj.element);
       updateStats();
-    });
-
-    container.addEventListener('click', () => {
-      if (tileSelecionadaParaMover) {
-        container.appendChild(tileSelecionadaParaMover);
-        tileSelecionadaParaMover.classList.remove('selected-for-move');
-        tileSelecionadaParaMover = null;
-        updateStats();
-      }
     });
   });
 
