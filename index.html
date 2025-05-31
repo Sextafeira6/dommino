@@ -283,7 +283,7 @@
 
     container.addEventListener('click', () => {
       if (tilesParaMover.size > 0) {
-        tilesParaMover.forEach(tile => {
+        [...tilesParaMover].forEach(tile => {
           container.appendChild(tile);
           tile.classList.remove('selected-for-move');
         });
