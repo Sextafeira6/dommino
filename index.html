@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Dominó - Contabilidade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: sans-serif;
@@ -34,13 +35,23 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      cursor: pointer;
+      cursor: grab;
       box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
       transition: background-color 0.3s;
+      margin: 2px;
+      touch-action: none;
+    }
+
+    .tile:active {
+      cursor: grabbing;
     }
 
     .tile.selected {
       background-color: #cc0000;
+    }
+
+    .tile.selected-for-move {
+      outline: 3px dashed orange;
     }
 
     .divider {
@@ -99,6 +110,12 @@
 
     .hand h3 {
       margin-top: 0;
+      cursor: pointer;
+    }
+
+    .hand h3:focus {
+      outline: 2px dashed #888;
+      background: #f0f0f0;
     }
 
     .hand-container {
@@ -106,10 +123,6 @@
       flex-wrap: wrap;
       gap: 6px;
       min-height: 100px;
-    }
-
-    .tile {
-      margin: 2px;
     }
   </style>
 </head>
@@ -120,17 +133,21 @@
   <div class="stats" id="stats-output">Carregando...</div>
 
   <div style="display: flex; flex-wrap: wrap; gap: 20px;">
-    <div class="hand" data-player="undefined">
-      <h3>Indefinido</h3>
+    <div class="hand" data-player="mine">
+      <h3 contenteditable="true">Minha mão</h3>
       <div class="hand-container" id="undefined-hand"></div>
     </div>
     <div class="hand" data-player="1">
-      <h3>Jogador 1</h3>
+      <h3 contenteditable="true">Jogador 1</h3>
       <div class="hand-container" id="player1-hand"></div>
     </div>
     <div class="hand" data-player="2">
-      <h3>Jogador 2</h3>
+      <h3 contenteditable="true">Jogador 2</h3>
       <div class="hand-container" id="player2-hand"></div>
+    </div>
+    <div class="hand" data-player="4">
+      <h3 contenteditable="true">Jogador 4</h3>
+      <div class="hand-container" id="player4-hand"></div>
     </div>
   </div>
 </div>
@@ -141,15 +158,11 @@
   const triangle = document.getElementById('domino-triangle');
   const statsOutput = document.getElementById('stats-output');
   const allTiles = [];
+  let tileSelecionadaParaMover = null;
 
   const dotPatterns = {
-    0: [],
-    1: [4],
-    2: [0, 8],
-    3: [0, 4, 8],
-    4: [0, 2, 6, 8],
-    5: [0, 2, 4, 6, 8],
-    6: [0, 2, 3, 5, 6, 8]
+    0: [], 1: [4], 2: [0, 8], 3: [0, 4, 8],
+    4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8]
   };
 
   const faceNames = ["Branco", "Ás", "Duque", "Terno", "Quadra", "Quina", "Sena"];
@@ -200,9 +213,37 @@
       const index = allTiles.findIndex(t => t.element === tile);
       e.dataTransfer.setData('text/plain', index.toString());
     });
+
+    // Clique longo e toque para mobile
+    let pressTimer = null;
+
+    tile.addEventListener('mousedown', () => {
+      pressTimer = setTimeout(() => {
+        if (tileSelecionadaParaMover) {
+          tileSelecionadaParaMover.classList.remove('selected-for-move');
+        }
+        tileSelecionadaParaMover = tile;
+        tile.classList.add('selected-for-move');
+      }, 1000);
+    });
+
+    tile.addEventListener('mouseup', () => clearTimeout(pressTimer));
+    tile.addEventListener('mouseleave', () => clearTimeout(pressTimer));
+
+    tile.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // impede zoom ou scroll acidental
+      pressTimer = setTimeout(() => {
+        if (tileSelecionadaParaMover) {
+          tileSelecionadaParaMover.classList.remove('selected-for-move');
+        }
+        tileSelecionadaParaMover = tile;
+        tile.classList.add('selected-for-move');
+      }, 1000);
+    });
+
+    tile.addEventListener('touchend', () => clearTimeout(pressTimer));
   }
 
-  // Criar as pedras
   for (let i = 0; i <= 6; i++) {
     const row = document.createElement('div');
     row.classList.add('row');
@@ -236,7 +277,6 @@
     triangle.appendChild(row);
   }
 
-  // Ativar áreas de drop
   document.querySelectorAll('.hand-container').forEach(container => {
     container.addEventListener('dragover', e => e.preventDefault());
 
@@ -246,6 +286,15 @@
       const tileObj = allTiles[index];
       container.appendChild(tileObj.element);
       updateStats();
+    });
+
+    container.addEventListener('click', () => {
+      if (tileSelecionadaParaMover) {
+        container.appendChild(tileSelecionadaParaMover);
+        tileSelecionadaParaMover.classList.remove('selected-for-move');
+        tileSelecionadaParaMover = null;
+        updateStats();
+      }
     });
   });
 
